@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap');
+
+/* D&D Fantasy Design System - All colors MUST be HSL */
+
+@layer base {
+  :root {
+    /* D&D Fantasy Color Palette */
+    --dnd-dark: 18 37% 12%;          /* #2C1810 - Dark wood brown */
+    --dnd-parchment: 45 43% 91%;     /* #F5EBD4 - Parchment cream */
+    --dnd-gold: 51 70% 53%;          /* #D4AF37 - Rich gold */
+    --dnd-red: 0 100% 27%;           /* #8B0000 - Deep crimson */
+    --dnd-wood: 25 65% 32%;          /* #8B4513 - Saddle brown */
+    --dnd-copper: 23 70% 40%;        /* #B87333 - Copper */
+    --dnd-silver: 0 0% 75%;          /* #C0C0C0 - Silver */
+    
+    /* Theme mappings */
+    --background: var(--dnd-dark);
+    --foreground: var(--dnd-parchment);
+    
+    --card: var(--dnd-dark);
+    --card-foreground: var(--dnd-parchment);
+    
+    --popover: var(--dnd-dark);
+    --popover-foreground: var(--dnd-parchment);
+    
+    --primary: var(--dnd-gold);
+    --primary-foreground: var(--dnd-dark);
+    
+    --secondary: var(--dnd-wood);
+    --secondary-foreground: var(--dnd-parchment);
+    
+    --muted: 18 37% 20%;
+    --muted-foreground: var(--dnd-parchment);
+    
+    --accent: var(--dnd-red);
+    --accent-foreground: var(--dnd-parchment);
+    
+    --destructive: var(--dnd-red);
+    --destructive-foreground: var(--dnd-parchment);
+    
+    --border: var(--dnd-wood);
+    --input: var(--dnd-wood);
+    --ring: var(--dnd-gold);
+    
+    --radius: 0.5rem;
+    
+    /* Fantasy gradients */
+    --gradient-fantasy: linear-gradient(135deg, hsl(var(--dnd-red)) 0%, hsl(var(--dnd-wood)) 50%, hsl(var(--dnd-dark)) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(var(--dnd-gold)) 0%, hsl(var(--dnd-copper)) 100%);
+    --gradient-dice: linear-gradient(135deg, hsl(0 0% 95%) 0%, hsl(0 0% 85%) 50%, hsl(0 0% 75%) 100%);
+    
+    /* Shadow effects */
+    --shadow-mystical: 0 0 20px hsl(var(--dnd-gold) / 0.3);
+    --shadow-deep: 0 10px 30px -10px hsl(0 0% 0% / 0.8);
+    --shadow-dice: inset 0 0 10px hsl(0 0% 0% / 0.2);
+    
+    /* Animations */
+    --transition-magical: all 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+    --transition-dice: transform 1.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Cinzel', 'Georgia', serif;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%232C1810"/><path d="M0,0 L100,100 M100,0 L0,100" stroke="%2335281A" stroke-width="1"/></svg>');
+    min-height: 100vh;
+  }
+  
+  .fantasy-text-shadow {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  }
+  
+  .dice-glow {
+    box-shadow: var(--shadow-mystical);
+  }
+  
+  .magical-transition {
+    transition: var(--transition-magical);
+  }
+}
