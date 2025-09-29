@@ -4,11 +4,20 @@ import { toast } from '@/hooks/use-toast';
 import ThreeDDice from '@/components/ThreeDDice';
 import DiceSelector, { DiceType } from '@/components/DiceSelector';
 import RollHistory from '@/components/RollHistory';
+import { Input } from '@/components/ui/input';
+import { Plus, Minus, X, Trash } from 'lucide-react';
+
+interface DiceRoll {
+  diceType: string;
+  count: number;
+}
 
 interface RollResult {
   id: string;
-  dice: string;
-  result: number;
+  diceExpression: string; // e.g., "2d20 + 1d6 + 3"
+  individualResults: { diceType: string, results: number[] }[];
+  modifier: number;
+  total: number;
   timestamp: string;
 }
 
@@ -23,10 +32,13 @@ const diceTypes: DiceType[] = [
 ];
 
 const Index = () => {
-  const [activeDice, setActiveDice] = useState<string>('d20');
+  const [selectedDice, setSelectedDice] = useState<DiceRoll[]>([{ diceType: 'd20', count: 1 }]);
+  const [modifier, setModifier] = useState<number>(0);
   const [isRolling, setIsRolling] = useState<boolean>(false);
-  const [currentResult, setCurrentResult] = useState<number | null>(null);
+  const [currentResults, setCurrentResults] = useState<{ diceType: string, results: number[] }[] | null>(null);
+  const [currentTotal, setCurrentTotal] = useState<number | null>(null);
   const [rollHistory, setRollHistory] = useState<RollResult[]>([]);
+  const [activeDice, setActiveDice] = useState<string>('d20'); // For 3D visualization
 
   const getRandomResult = (diceType: string): number => {
     const dice = diceTypes.find(d => d.id === diceType);
@@ -39,22 +51,59 @@ const Index = () => {
     return Math.floor(Math.random() * dice.sides) + 1;
   };
 
+  const generateDiceExpression = () => {
+    let expression = '';
+    
+    selectedDice.forEach((dice, index) => {
+      if (index > 0) expression += ' + ';
+      expression += `${dice.count}${dice.diceType}`;
+    });
+    
+    if (modifier > 0) {
+      expression += ` + ${modifier}`;
+    } else if (modifier < 0) {
+      expression += ` - ${Math.abs(modifier)}`;
+    }
+    
+    return expression;
+  };
+
   const rollDice = useCallback(() => {
-    if (isRolling) return;
+    if (isRolling || selectedDice.length === 0) return;
 
     setIsRolling(true);
-    setCurrentResult(null);
+    setCurrentResults(null);
+    setCurrentTotal(null);
+
+    // For 3D visualization, use the first dice type
+    setActiveDice(selectedDice[0].diceType);
 
     // Simulate dice rolling animation duration
     setTimeout(() => {
-      const result = getRandomResult(activeDice);
-      setCurrentResult(result);
+      // Roll all selected dice
+      const allResults = selectedDice.map(dice => {
+        const diceResults: number[] = [];
+        for (let i = 0; i < dice.count; i++) {
+          diceResults.push(getRandomResult(dice.diceType));
+        }
+        return { diceType: dice.diceType, results: diceResults };
+      });
+
+      // Calculate total
+      const total = allResults.reduce((sum, diceResult) => {
+        return sum + diceResult.results.reduce((diceSum, result) => diceSum + result, 0);
+      }, modifier);
+
+      setCurrentResults(allResults);
+      setCurrentTotal(total);
       
       // Add to history
       const newRoll: RollResult = {
         id: Date.now().toString(),
-        dice: activeDice,
-        result,
+        diceExpression: generateDiceExpression(),
+        individualResults: allResults,
+        modifier: modifier,
+        total: total,
         timestamp: new Date().toLocaleTimeString(),
       };
       
@@ -62,18 +111,65 @@ const Index = () => {
       setIsRolling(false);
       
       // Show toast notification
-      const diceType = diceTypes.find(d => d.id === activeDice);
       toast({
         title: "Dice Rolled!",
-        description: `${diceType?.name}: ${activeDice === 'd100' && result === 0 ? '00' : result}`,
+        description: `Result: ${total}`,
       });
-    }, 3500); // Changed from 2000ms to 3500ms to make the animation longer
-  }, [activeDice, isRolling]);
+    }, 3500);
+  }, [selectedDice, modifier, isRolling]);
 
   const handleDiceSelect = (diceId: string) => {
     if (!isRolling) {
-      setActiveDice(diceId);
-      setCurrentResult(null);
+      // Add this dice type or increment its count
+      const existingDiceIndex = selectedDice.findIndex(d => d.diceType === diceId);
+      
+      if (existingDiceIndex >= 0) {
+        // Increment count of existing dice
+        const newDice = [...selectedDice];
+        newDice[existingDiceIndex] = {
+          ...newDice[existingDiceIndex],
+          count: newDice[existingDiceIndex].count + 1
+        };
+        setSelectedDice(newDice);
+      } else {
+        // Add new dice type
+        setSelectedDice([...selectedDice, { diceType: diceId, count: 1 }]);
+      }
+    }
+  };
+
+  const handleModifierChange = (value: number) => {
+    if (!isRolling) {
+      setModifier(value);
+    }
+  };
+
+  const handleRemoveDice = (index: number) => {
+    if (!isRolling) {
+      const newDice = [...selectedDice];
+      newDice.splice(index, 1);
+      setSelectedDice(newDice);
+    }
+  };
+
+  const handleDiceCountChange = (index: number, newCount: number) => {
+    if (!isRolling) {
+      const newDice = [...selectedDice];
+      if (newCount > 0) {
+        newDice[index] = { ...newDice[index], count: newCount };
+        setSelectedDice(newDice);
+      } else {
+        handleRemoveDice(index);
+      }
+    }
+  };
+
+  const clearDiceSelection = () => {
+    if (!isRolling) {
+      setSelectedDice([{ diceType: 'd20', count: 1 }]);
+      setModifier(0);
+      setCurrentResults(null);
+      setCurrentTotal(null);
     }
   };
 
@@ -92,8 +188,6 @@ const Index = () => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyPress]);
 
-  const currentDiceType = diceTypes.find(d => d.id === activeDice);
-
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 space-y-8">
       {/* Header */}
@@ -110,34 +204,155 @@ const Index = () => {
       {/* Main Content */}
       <div className="flex flex-col items-center space-y-8 w-full max-w-6xl">
         {/* Dice Selector */}
-        <DiceSelector
-          diceTypes={diceTypes}
-          activeDice={activeDice}
-          onDiceSelect={handleDiceSelect}
-          disabled={isRolling}
-        />
+        <div className="w-full">
+          <div className="flex flex-col space-y-4">
+            {/* Selected dice display */}
+            <div className="bg-dnd-dark/60 backdrop-blur-sm rounded-lg border-2 border-dnd-wood p-4">
+              <h3 className="text-lg font-semibold text-dnd-gold mb-3">Selected Dice</h3>
+              
+              {selectedDice.length === 0 ? (
+                <p className="text-dnd-parchment/70 italic">Select dice to roll</p>
+              ) : (
+                <div className="space-y-2">
+                  {selectedDice.map((dice, index) => (
+                    <div key={index} className="flex items-center space-x-3 p-2 bg-dnd-wood/20 rounded">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDiceCountChange(index, dice.count - 1)}
+                        disabled={isRolling}
+                        className="h-8 w-8 p-0 rounded-full"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      
+                      <span className="font-bold text-dnd-parchment">
+                        {dice.count}{dice.diceType}
+                      </span>
+                      
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleDiceCountChange(index, dice.count + 1)}
+                        disabled={isRolling}
+                        className="h-8 w-8 p-0 rounded-full"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        onClick={() => handleRemoveDice(index)}
+                        disabled={isRolling}
+                        className="ml-auto h-8 w-8 p-0 rounded-full"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  
+                  {/* Modifier section */}
+                  <div className="flex items-center space-x-3 p-2 bg-dnd-wood/20 rounded mt-2">
+                    <span className="text-dnd-parchment font-medium">Modifier:</span>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleModifierChange(modifier - 1)}
+                      disabled={isRolling}
+                      className="h-8 w-8 p-0 rounded-full"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    
+                    <span className="font-bold text-dnd-gold w-8 text-center">
+                      {modifier > 0 ? `+${modifier}` : modifier}
+                    </span>
+                    
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleModifierChange(modifier + 1)}
+                      disabled={isRolling}
+                      className="h-8 w-8 p-0 rounded-full"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* Expression preview */}
+                  <div className="mt-3 text-center">
+                    <p className="text-dnd-parchment font-medium">Roll Expression:</p>
+                    <p className="text-dnd-gold text-lg font-bold">{generateDiceExpression()}</p>
+                  </div>
+                  
+                  <div className="mt-3 flex justify-end">
+                    <Button 
+                      variant="outline"
+                      onClick={clearDiceSelection}
+                      disabled={isRolling}
+                      className="text-dnd-copper flex items-center"
+                    >
+                      <Trash className="h-4 w-4 mr-2" />
+                      Reset
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <DiceSelector
+            diceTypes={diceTypes}
+            onDiceSelect={handleDiceSelect}
+            disabled={isRolling}
+          />
+        </div>
 
         {/* 3D Dice Display */}
         <div className="w-full max-w-lg">
           <ThreeDDice
             diceType={activeDice}
             isRolling={isRolling}
-            result={currentResult}
+            result={currentResults ? currentResults[0]?.results[0] || null : null}
           />
         </div>
 
         {/* Result Display */}
         <div className="text-center space-y-4">
-          {currentResult !== null && !isRolling && (
+          {currentTotal !== null && !isRolling && (
             <div className="bg-gradient-to-r from-dnd-gold/20 to-dnd-copper/20 p-6 rounded-lg border-2 border-dnd-gold backdrop-blur-sm">
               <h2 className="text-2xl font-semibold text-dnd-gold mb-2">Result</h2>
-              <div className="text-5xl font-bold text-dnd-parchment fantasy-text-shadow">
-                {currentDiceType?.name}: {activeDice === 'd100' && currentResult === 0 ? '00' : currentResult}
+              <div className="text-5xl font-bold text-dnd-parchment fantasy-text-shadow mb-4">
+                {currentTotal}
               </div>
+              
+              {/* Show individual dice results */}
+              {currentResults && currentResults.length > 0 && (
+                <div className="mt-4 text-left">
+                  <h3 className="text-xl text-dnd-gold mb-1">Breakdown:</h3>
+                  <div className="space-y-1 text-dnd-parchment">
+                    {currentResults.map((diceResult, index) => (
+                      <div key={index} className="flex flex-wrap items-center">
+                        <span className="font-bold mr-2">{diceResult.diceType}:</span>
+                        <span>
+                          {diceResult.results.join(', ')}
+                        </span>
+                      </div>
+                    ))}
+                    {modifier !== 0 && (
+                      <div className="flex items-center">
+                        <span className="font-bold mr-2">Modifier:</span>
+                        <span>{modifier > 0 ? `+${modifier}` : modifier}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           
-          {!currentResult && !isRolling && (
+          {currentTotal === null && !isRolling && (
             <div className="text-xl text-dnd-parchment/70 italic">
               Choose your dice and roll to begin your adventure!
             </div>
@@ -153,7 +368,7 @@ const Index = () => {
         {/* Roll Button */}
         <Button
           onClick={rollDice}
-          disabled={isRolling}
+          disabled={isRolling || selectedDice.length === 0}
           size="lg"
           className={`
             text-2xl font-bold py-6 px-12 rounded-xl

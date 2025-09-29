@@ -1,7 +1,14 @@
+interface DiceRoll {
+  diceType: string;
+  results: number[];
+}
+
 interface RollResult {
   id: string;
-  dice: string;
-  result: number;
+  diceExpression: string;
+  individualResults: DiceRoll[];
+  modifier: number;
+  total: number;
   timestamp: string;
 }
 
@@ -32,19 +39,33 @@ export default function RollHistory({ history }: RollHistoryProps) {
         {history.map((roll) => (
           <div 
             key={roll.id}
-            className="flex justify-between items-center p-3 bg-dnd-wood/20 rounded border border-dnd-copper/30 magical-transition hover:bg-dnd-wood/30"
+            className="p-3 bg-dnd-wood/20 rounded border border-dnd-copper/30 magical-transition hover:bg-dnd-wood/30"
           >
-            <div className="flex items-center gap-3">
+            <div className="flex justify-between items-center">
               <span className="text-dnd-gold font-semibold">
-                {roll.dice.toUpperCase()}
+                {roll.diceExpression}
               </span>
-              <span className="text-2xl font-bold text-dnd-parchment">
-                {roll.result}
+              <span className="text-dnd-parchment/70 text-sm">
+                {roll.timestamp}
               </span>
             </div>
-            <span className="text-dnd-parchment/70 text-sm">
-              {roll.timestamp}
-            </span>
+            <div className="mt-1">
+              <span className="text-2xl font-bold text-dnd-parchment">
+                {roll.total}
+              </span>
+            </div>
+            <div className="mt-1 text-sm text-dnd-parchment/80">
+              {roll.individualResults.map((dice, i) => (
+                <span key={i} className="mr-3">
+                  {dice.diceType}: {dice.results.join(', ')}
+                </span>
+              ))}
+              {roll.modifier !== 0 && (
+                <span className="mr-3">
+                  Modifier: {roll.modifier > 0 ? `+${roll.modifier}` : roll.modifier}
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>
