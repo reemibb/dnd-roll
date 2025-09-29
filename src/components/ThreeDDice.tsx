@@ -1,7 +1,8 @@
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls, Text } from '@react-three/drei';
-import { useState, useRef } from 'react';
-import { Mesh } from 'three';
+import { useFrame } from '@react-three/fiber';
+import { useState, useRef, useEffect } from 'react';
+import { Mesh, Vector3, Quaternion, Euler } from 'three';
 
 interface ThreeDDiceProps {
   diceType: string;
@@ -12,8 +13,15 @@ interface ThreeDDiceProps {
 
 function D20Dice({ isRolling, result }: { isRolling: boolean; result: number | null }) {
   const meshRef = useRef<Mesh>(null);
-  
-  // D20 face positions and rotations (20 triangular faces)
+  const initialRotation = useRef([0.2, 0.2, 0]);
+  const targetRotation = useRef(new Euler(0.2, 0.2, 0));
+  const rotationVelocity = useRef(new Vector3(
+    Math.random() * 0.2 - 0.1,
+    Math.random() * 0.2 - 0.1, 
+    Math.random() * 0.2 - 0.1
+  ));
+
+  // D20 face positions (20 faces of an icosahedron)
   const d20Faces = [
     { number: 1, position: [0, 0, 1.1], rotation: [0, 0, 0] },
     { number: 2, position: [0.85, 0.52, 0.52], rotation: [0.6, 0.8, 0] },
@@ -37,8 +45,57 @@ function D20Dice({ isRolling, result }: { isRolling: boolean; result: number | n
     { number: 20, position: [1.05, 0, 0], rotation: [0, Math.PI/2, 0] },
   ];
 
+  // Function to find the face that should be on top based on the result
+  const setFinalRotation = () => {
+    if (result && meshRef.current) {
+      const targetFace = d20Faces.find(face => face.number === result);
+      if (targetFace) {
+        // We want to rotate so the target face is on top
+        targetRotation.current = new Euler(
+          -targetFace.rotation[0],
+          -targetFace.rotation[1],
+          -targetFace.rotation[2]
+        );
+      }
+    }
+  };
+  
+  useEffect(() => {
+    if (!isRolling && result) {
+      setFinalRotation();
+    } else if (isRolling) {
+      // Random initial velocity for rolling
+      rotationVelocity.current = new Vector3(
+        Math.random() * 5 - 2.5,
+        Math.random() * 5 - 2.5,
+        Math.random() * 5 - 2.5
+      );
+    }
+  }, [isRolling, result]);
+
+  useFrame((state, delta) => {
+    if (!meshRef.current) return;
+    
+    if (isRolling) {
+      // Apply continuous rotation with physics-like motion
+      meshRef.current.rotation.x += rotationVelocity.current.x * delta;
+      meshRef.current.rotation.y += rotationVelocity.current.y * delta;
+      meshRef.current.rotation.z += rotationVelocity.current.z * delta;
+      
+      // Apply gravity-like slowdown
+      rotationVelocity.current.x *= 0.99;
+      rotationVelocity.current.y *= 0.99;
+      rotationVelocity.current.z *= 0.99;
+    } else if (result) {
+      // Smoothly rotate to final position
+      meshRef.current.rotation.x = meshRef.current.rotation.x * 0.95 + targetRotation.current.x * 0.05;
+      meshRef.current.rotation.y = meshRef.current.rotation.y * 0.95 + targetRotation.current.y * 0.05;
+      meshRef.current.rotation.z = meshRef.current.rotation.z * 0.95 + targetRotation.current.z * 0.05;
+    }
+  });
+
   return (
-    <group rotation={isRolling ? [Math.PI * 4, Math.PI * 4, Math.PI * 2] : [0.2, 0.2, 0]}>
+    <group>
       <mesh ref={meshRef} castShadow receiveShadow>
         <icosahedronGeometry args={[1, 0]} />
         <meshPhysicalMaterial 
@@ -71,6 +128,12 @@ function D20Dice({ isRolling, result }: { isRolling: boolean; result: number | n
 
 function D6Dice({ isRolling, result }: { isRolling: boolean; result: number | null }) {
   const meshRef = useRef<Mesh>(null);
+  const rotationVelocity = useRef(new Vector3(
+    Math.random() * 0.2 - 0.1,
+    Math.random() * 0.2 - 0.1, 
+    Math.random() * 0.2 - 0.1
+  ));
+  const targetRotation = useRef(new Euler(0.2, 0.2, 0));
   
   // D6 face positions (6 faces of a cube)
   const d6Faces = [
@@ -81,6 +144,56 @@ function D6Dice({ isRolling, result }: { isRolling: boolean; result: number | nu
     { number: 2, position: [0, 0.51, 0], rotation: [-Math.PI/2, 0, 0] }, // top
     { number: 5, position: [0, -0.51, 0], rotation: [Math.PI/2, 0, 0] }, // bottom
   ];
+  
+  // Function to find the face that should be on top based on the result
+  const setFinalRotation = () => {
+    if (result && meshRef.current) {
+      const targetFace = d6Faces.find(face => face.number === result);
+      if (targetFace) {
+        // We want to rotate so the target face is on top
+        if (result === 1) targetRotation.current = new Euler(Math.PI/2, 0, 0);
+        else if (result === 6) targetRotation.current = new Euler(-Math.PI/2, 0, 0);
+        else if (result === 3) targetRotation.current = new Euler(0, 0, -Math.PI/2);
+        else if (result === 4) targetRotation.current = new Euler(0, 0, Math.PI/2);
+        else if (result === 2) targetRotation.current = new Euler(0, 0, 0);
+        else if (result === 5) targetRotation.current = new Euler(Math.PI, 0, 0);
+      }
+    }
+  };
+  
+  useEffect(() => {
+    if (!isRolling && result) {
+      setFinalRotation();
+    } else if (isRolling) {
+      // Random initial velocity for rolling
+      rotationVelocity.current = new Vector3(
+        Math.random() * 5 - 2.5,
+        Math.random() * 5 - 2.5,
+        Math.random() * 5 - 2.5
+      );
+    }
+  }, [isRolling, result]);
+
+  useFrame((state, delta) => {
+    if (!meshRef.current) return;
+    
+    if (isRolling) {
+      // Apply continuous rotation with physics-like motion
+      meshRef.current.rotation.x += rotationVelocity.current.x * delta;
+      meshRef.current.rotation.y += rotationVelocity.current.y * delta;
+      meshRef.current.rotation.z += rotationVelocity.current.z * delta;
+      
+      // Apply gravity-like slowdown
+      rotationVelocity.current.x *= 0.99;
+      rotationVelocity.current.y *= 0.99;
+      rotationVelocity.current.z *= 0.99;
+    } else if (result) {
+      // Smoothly rotate to final position
+      meshRef.current.rotation.x = meshRef.current.rotation.x * 0.95 + targetRotation.current.x * 0.05;
+      meshRef.current.rotation.y = meshRef.current.rotation.y * 0.95 + targetRotation.current.y * 0.05;
+      meshRef.current.rotation.z = meshRef.current.rotation.z * 0.95 + targetRotation.current.z * 0.05;
+    }
+  });
   
   const createDots = (number: number, faceIndex: number) => {
     const dots = [];
@@ -116,7 +229,7 @@ function D6Dice({ isRolling, result }: { isRolling: boolean; result: number | nu
   };
 
   return (
-    <group rotation={isRolling ? [Math.PI * 4, Math.PI * 4, Math.PI * 2] : [0.2, 0.2, 0]}>
+    <group>
       <mesh ref={meshRef} castShadow receiveShadow>
         <boxGeometry args={[1, 1, 1]} />
         <meshPhysicalMaterial 
@@ -136,6 +249,12 @@ function D6Dice({ isRolling, result }: { isRolling: boolean; result: number | nu
 
 function GenericDice({ diceType, isRolling, result }: { diceType: string; isRolling: boolean; result: number | null }) {
   const meshRef = useRef<Mesh>(null);
+  const rotationVelocity = useRef(new Vector3(
+    Math.random() * 0.2 - 0.1,
+    Math.random() * 0.2 - 0.1, 
+    Math.random() * 0.2 - 0.1
+  ));
+  const targetRotation = useRef(new Euler(0.2, 0.2, 0));
   
   const getGeometry = () => {
     switch (diceType) {
@@ -164,34 +283,77 @@ function GenericDice({ diceType, isRolling, result }: { diceType: string; isRoll
         return Array.from({length: 8}, (_, i) => ({
           number: i + 1,
           position: [
-            Math.cos(i * Math.PI / 4) * 0.8,
-            Math.sin(i * Math.PI / 4) * 0.8,
-            i % 2 === 0 ? 0.6 : -0.6
+            Math.cos(i * Math.PI / 4) * 0.8, 
+            ((i % 2) * 2 - 1) * 0.5,
+            Math.sin(i * Math.PI / 4) * 0.8
           ],
-          rotation: [0, i * Math.PI / 4, 0]
+          rotation: [((i % 2) * 2 - 1) * Math.PI / 3, i * Math.PI / 4, 0]
+        }));
+      case 'd10':
+      case 'd100':
+        return Array.from({length: 10}, (_, i) => ({
+          number: diceType === 'd100' ? i * 10 : i + 1,
+          position: [
+            Math.cos(i * Math.PI / 5) * 0.8,
+            0.3 * ((i % 2) * 2 - 1),
+            Math.sin(i * Math.PI / 5) * 0.8
+          ],
+          rotation: [((i % 2) * 2 - 1) * Math.PI / 6, i * Math.PI / 5, 0]
         }));
       case 'd12':
-        return Array.from({length: 12}, (_, i) => {
-          const angle = (i * 2 * Math.PI) / 12;
-          return {
-            number: i + 1,
-            position: [
-              Math.cos(angle) * 0.9,
-              Math.sin(angle) * 0.9,
-              i % 3 === 0 ? 0.5 : i % 3 === 1 ? 0 : -0.5
-            ],
-            rotation: [0, angle, 0]
-          };
-        });
+        return Array.from({length: 12}, (_, i) => ({
+          number: i + 1,
+          position: [
+            Math.cos(i * Math.PI / 6) * ((i % 2) ? 0.9 : 0.7),
+            ((i % 3) - 1) * 0.5,
+            Math.sin(i * Math.PI / 6) * ((i % 2) ? 0.9 : 0.7)
+          ],
+          rotation: [((i % 3) - 1) * Math.PI / 4, i * Math.PI / 6, 0]
+        }));
       default:
-        return [];
+        return Array.from({length: Number(diceType.slice(1))}, (_, i) => ({
+          number: i + 1,
+          position: [
+            Math.cos(i * 2 * Math.PI / Number(diceType.slice(1))) * 0.8,
+            0,
+            Math.sin(i * 2 * Math.PI / Number(diceType.slice(1))) * 0.8
+          ],
+          rotation: [0, i * 2 * Math.PI / Number(diceType.slice(1)), 0]
+        }));
     }
   };
-
+  
   const faces = getFacePositions();
+  
+  useEffect(() => {
+    if (isRolling) {
+      // Random initial velocity for rolling
+      rotationVelocity.current = new Vector3(
+        Math.random() * 5 - 2.5,
+        Math.random() * 5 - 2.5,
+        Math.random() * 5 - 2.5
+      );
+    }
+  }, [isRolling]);
+
+  useFrame((state, delta) => {
+    if (!meshRef.current) return;
+    
+    if (isRolling) {
+      // Apply continuous rotation with physics-like motion
+      meshRef.current.rotation.x += rotationVelocity.current.x * delta;
+      meshRef.current.rotation.y += rotationVelocity.current.y * delta;
+      meshRef.current.rotation.z += rotationVelocity.current.z * delta;
+      
+      // Apply gravity-like slowdown
+      rotationVelocity.current.x *= 0.99;
+      rotationVelocity.current.y *= 0.99;
+      rotationVelocity.current.z *= 0.99;
+    }
+  });
 
   return (
-    <group rotation={isRolling ? [Math.PI * 4, Math.PI * 4, Math.PI * 2] : [0.2, 0.2, 0]}>
+    <group>
       <mesh ref={meshRef} castShadow receiveShadow>
         {getGeometry()}
         <meshPhysicalMaterial 
@@ -213,8 +375,9 @@ function GenericDice({ diceType, isRolling, result }: { diceType: string; isRoll
           color="#2C1810"
           anchorX="center"
           anchorY="middle"
+          font="/fonts/cinzel.woff"
         >
-          {face.number}
+          {face.number === 0 && diceType === 'd100' ? '00' : face.number}
         </Text>
       ))}
     </group>
