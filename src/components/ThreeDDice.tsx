@@ -64,11 +64,10 @@ function D20Dice({ isRolling, result }: { isRolling: boolean; result: number | n
     if (!isRolling && result) {
       setFinalRotation();
     } else if (isRolling) {
-      // Random initial velocity for rolling
       rotationVelocity.current = new Vector3(
-        Math.random() * 5 - 2.5,
-        Math.random() * 5 - 2.5,
-        Math.random() * 5 - 2.5
+            Math.random() * 8 - 4,  // Changed from 5 to 8
+            Math.random() * 8 - 4,  // Changed from 5 to 8
+            Math.random() * 8 - 4   // Changed from 5 to 8
       );
     }
   }, [isRolling, result]);
@@ -82,10 +81,9 @@ function D20Dice({ isRolling, result }: { isRolling: boolean; result: number | n
       meshRef.current.rotation.y += rotationVelocity.current.y * delta;
       meshRef.current.rotation.z += rotationVelocity.current.z * delta;
       
-      // Apply gravity-like slowdown
-      rotationVelocity.current.x *= 0.99;
-      rotationVelocity.current.y *= 0.99;
-      rotationVelocity.current.z *= 0.99;
+      rotationVelocity.current.x *= 0.992;  // Changed from 0.99 to 0.992
+      rotationVelocity.current.y *= 0.992;  // Changed from 0.99 to 0.992
+      rotationVelocity.current.z *= 0.992;
     } else if (result) {
       // Smoothly rotate to final position
       meshRef.current.rotation.x = meshRef.current.rotation.x * 0.95 + targetRotation.current.x * 0.05;
@@ -106,22 +104,6 @@ function D20Dice({ isRolling, result }: { isRolling: boolean; result: number | n
           clearcoatRoughness={0.1}
         />
       </mesh>
-      
-      {/* Numbers on each face */}
-      {d20Faces.map((face) => (
-        <Text
-          key={face.number}
-          position={face.position as [number, number, number]}
-          rotation={face.rotation as [number, number, number]}
-          fontSize={0.15}
-          color="#2C1810"
-          anchorX="center"
-          anchorY="middle"
-          font="/fonts/cinzel.woff"
-        >
-          {face.number}
-        </Text>
-      ))}
     </group>
   );
 }
@@ -162,17 +144,17 @@ function D6Dice({ isRolling, result }: { isRolling: boolean; result: number | nu
   };
   
   useEffect(() => {
-    if (!isRolling && result) {
-      setFinalRotation();
-    } else if (isRolling) {
-      // Random initial velocity for rolling
-      rotationVelocity.current = new Vector3(
-        Math.random() * 5 - 2.5,
-        Math.random() * 5 - 2.5,
-        Math.random() * 5 - 2.5
-      );
-    }
-  }, [isRolling, result]);
+  if (!isRolling && result) {
+    setFinalRotation();
+  } else if (isRolling) {
+    // Random initial velocity for rolling - increase these values
+    rotationVelocity.current = new Vector3(
+      Math.random() * 8 - 4,  // Changed from 5 to 8
+      Math.random() * 8 - 4,  // Changed from 5 to 8
+      Math.random() * 8 - 4   // Changed from 5 to 8
+    );
+  }
+}, [isRolling, result]);
 
   useFrame((state, delta) => {
     if (!meshRef.current) return;
@@ -183,10 +165,9 @@ function D6Dice({ isRolling, result }: { isRolling: boolean; result: number | nu
       meshRef.current.rotation.y += rotationVelocity.current.y * delta;
       meshRef.current.rotation.z += rotationVelocity.current.z * delta;
       
-      // Apply gravity-like slowdown
-      rotationVelocity.current.x *= 0.99;
-      rotationVelocity.current.y *= 0.99;
-      rotationVelocity.current.z *= 0.99;
+      rotationVelocity.current.x *= 0.992;  // Changed from 0.99 to 0.992
+      rotationVelocity.current.y *= 0.992;  // Changed from 0.99 to 0.992
+      rotationVelocity.current.z *= 0.992; 
     } else if (result) {
       // Smoothly rotate to final position
       meshRef.current.rotation.x = meshRef.current.rotation.x * 0.95 + targetRotation.current.x * 0.05;
@@ -194,39 +175,6 @@ function D6Dice({ isRolling, result }: { isRolling: boolean; result: number | nu
       meshRef.current.rotation.z = meshRef.current.rotation.z * 0.95 + targetRotation.current.z * 0.05;
     }
   });
-  
-  const createDots = (number: number, faceIndex: number) => {
-    const dots = [];
-    const dotPositions: { [key: number]: number[][] } = {
-      1: [[0, 0]],
-      2: [[-0.2, 0.2], [0.2, -0.2]],
-      3: [[-0.2, 0.2], [0, 0], [0.2, -0.2]],
-      4: [[-0.2, 0.2], [0.2, 0.2], [-0.2, -0.2], [0.2, -0.2]],
-      5: [[-0.2, 0.2], [0.2, 0.2], [0, 0], [-0.2, -0.2], [0.2, -0.2]],
-      6: [[-0.2, 0.2], [0.2, 0.2], [-0.2, 0], [0.2, 0], [-0.2, -0.2], [0.2, -0.2]]
-    };
-
-    const positions = dotPositions[number] || [[0, 0]];
-    const face = d6Faces[faceIndex];
-    
-    positions.forEach((pos, index) => {
-      dots.push(
-        <mesh 
-          key={`${faceIndex}-${index}`} 
-          position={[
-            face.position[0] + (face.rotation[1] === 0 ? pos[0] * Math.cos(face.rotation[2]) : 0),
-            face.position[1] + (face.rotation[0] === 0 ? pos[1] : pos[0] * Math.sin(face.rotation[0])),
-            face.position[2] + (face.rotation[1] === Math.PI/2 ? pos[0] : 0)
-          ]}
-        >
-          <sphereGeometry args={[0.05, 8, 8]} />
-          <meshStandardMaterial color="#2C1810" />
-        </mesh>
-      );
-    });
-    
-    return dots;
-  };
 
   return (
     <group>
@@ -240,9 +188,6 @@ function D6Dice({ isRolling, result }: { isRolling: boolean; result: number | nu
           clearcoatRoughness={0.1}
         />
       </mesh>
-      
-      {/* Dots on faces */}
-      {d6Faces.map((face, index) => createDots(face.number, index))}
     </group>
   );
 }
@@ -326,15 +271,15 @@ function GenericDice({ diceType, isRolling, result }: { diceType: string; isRoll
   const faces = getFacePositions();
   
   useEffect(() => {
-    if (isRolling) {
-      // Random initial velocity for rolling
-      rotationVelocity.current = new Vector3(
-        Math.random() * 5 - 2.5,
-        Math.random() * 5 - 2.5,
-        Math.random() * 5 - 2.5
-      );
-    }
-  }, [isRolling]);
+  if (isRolling) {
+    // Random initial velocity for rolling - increase these values
+    rotationVelocity.current = new Vector3(
+      Math.random() * 8 - 4,  // Changed from 5 to 8
+      Math.random() * 8 - 4,  // Changed from 5 to 8
+      Math.random() * 8 - 4   // Changed from 5 to 8
+    );
+  }
+}, [isRolling]);
 
   useFrame((state, delta) => {
     if (!meshRef.current) return;
@@ -345,10 +290,9 @@ function GenericDice({ diceType, isRolling, result }: { diceType: string; isRoll
       meshRef.current.rotation.y += rotationVelocity.current.y * delta;
       meshRef.current.rotation.z += rotationVelocity.current.z * delta;
       
-      // Apply gravity-like slowdown
-      rotationVelocity.current.x *= 0.99;
-      rotationVelocity.current.y *= 0.99;
-      rotationVelocity.current.z *= 0.99;
+      rotationVelocity.current.x *= 0.992;  // Changed from 0.99 to 0.992
+      rotationVelocity.current.y *= 0.992;  // Changed from 0.99 to 0.992
+      rotationVelocity.current.z *= 0.992; 
     }
   });
 
@@ -364,22 +308,6 @@ function GenericDice({ diceType, isRolling, result }: { diceType: string; isRoll
           clearcoatRoughness={0.1}
         />
       </mesh>
-      
-      {/* Numbers on faces */}
-      {faces.map((face) => (
-        <Text
-          key={face.number}
-          position={face.position as [number, number, number]}
-          rotation={face.rotation as [number, number, number]}
-          fontSize={diceType === 'd4' ? 0.2 : 0.15}
-          color="#2C1810"
-          anchorX="center"
-          anchorY="middle"
-          font="/fonts/cinzel.woff"
-        >
-          {face.number === 0 && diceType === 'd100' ? '00' : face.number}
-        </Text>
-      ))}
     </group>
   );
 }

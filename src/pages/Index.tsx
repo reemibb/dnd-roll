@@ -67,7 +67,7 @@ const Index = () => {
         title: "Dice Rolled!",
         description: `${diceType?.name}: ${activeDice === 'd100' && result === 0 ? '00' : result}`,
       });
-    }, 2000);
+    }, 3500); // Changed from 2000ms to 3500ms to make the animation longer
   }, [activeDice, isRolling]);
 
   const handleDiceSelect = (diceId: string) => {
