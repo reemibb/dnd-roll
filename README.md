@@ -6,8 +6,5 @@ It contains all 7 dice with the option of rolling multiple dice at the same, the
 
 ## License
 
-This code is not open-source.
+This project is licensed under the Apache License 2.0. See the [LICENSE](LICENSE) file for details.
 
-You may view, download, and modify it for personal or educational use only. Redistribution, commercial use, or republishing of the code (original or modified) is prohibited.
-
-See the [LICENSE](LICENSE) file for full terms.
