@@ -14,7 +14,7 @@ interface DiceRoll {
 
 interface RollResult {
   id: string;
-  diceExpression: string; // e.g., "2d20 + 1d6 + 3"
+  diceExpression: string; 
   individualResults: { diceType: string, results: number[] }[];
   modifier: number;
   total: number;
@@ -45,7 +45,7 @@ const Index = () => {
     if (!dice) return 1;
     
     if (diceType === 'd100') {
-      return Math.floor(Math.random() * 10) * 10; // 00, 10, 20, ... 90
+      return Math.floor(Math.random() * 10) * 10; 
     }
     
     return Math.floor(Math.random() * dice.sides) + 1;
@@ -75,7 +75,6 @@ const Index = () => {
     setCurrentResults(null);
     setCurrentTotal(null);
 
-    // For 3D visualization, use the first dice type
     setActiveDice(selectedDice[0].diceType);
 
     // Simulate dice rolling animation duration
@@ -110,7 +109,7 @@ const Index = () => {
       setRollHistory(prev => [newRoll, ...prev.slice(0, 9)]); // Keep last 10 rolls
       setIsRolling(false);
       
-      // Show toast notification
+      // Show notification
       toast({
         title: "Dice Rolled!",
         description: `Result: ${total}`,
@@ -181,7 +180,6 @@ const Index = () => {
     }
   }, [rollDice, isRolling]);
 
-  // Add keyboard event listener
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => handleKeyPress(event);
     document.addEventListener('keydown', handleKeyDown);
@@ -190,7 +188,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 space-y-8">
-      {/* Header */}
+      
       <header className="text-center max-w-4xl w-full">
         <h1 className="text-5xl md:text-6xl font-bold text-dnd-gold fantasy-text-shadow mb-4 tracking-wider">
           D&D DICE ROLLER
@@ -383,7 +381,7 @@ const Index = () => {
         </Button>
 
         {/* Keyboard Hint */}
-        <p className="text-sm text-dnd-parchment/60 text-center">
+        <p className="text-sm text-dnd-parchment/60 text-center hidden md:block">
           Press <kbd className="bg-dnd-wood px-2 py-1 rounded text-dnd-parchment">Space</kbd> or{' '}
           <kbd className="bg-dnd-wood px-2 py-1 rounded text-dnd-parchment">Enter</kbd> to roll
         </p>
@@ -392,7 +390,6 @@ const Index = () => {
         <RollHistory history={rollHistory} />
       </div>
 
-      {/* Footer */}
       <footer className="text-center text-dnd-parchment/70 mt-16">
         <div className="w-full h-px bg-gradient-to-r from-transparent via-dnd-gold to-transparent mb-4" />
         <p className="italic">

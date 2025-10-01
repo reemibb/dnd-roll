@@ -65,9 +65,9 @@ function D20Dice({ isRolling, result }: { isRolling: boolean; result: number | n
       setFinalRotation();
     } else if (isRolling) {
       rotationVelocity.current = new Vector3(
-            Math.random() * 8 - 4,  // Changed from 5 to 8
-            Math.random() * 8 - 4,  // Changed from 5 to 8
-            Math.random() * 8 - 4   // Changed from 5 to 8
+            Math.random() * 8 - 4,  
+            Math.random() * 8 - 4,  
+            Math.random() * 8 - 4   
       );
     }
   }, [isRolling, result]);
@@ -81,11 +81,10 @@ function D20Dice({ isRolling, result }: { isRolling: boolean; result: number | n
       meshRef.current.rotation.y += rotationVelocity.current.y * delta;
       meshRef.current.rotation.z += rotationVelocity.current.z * delta;
       
-      rotationVelocity.current.x *= 0.992;  // Changed from 0.99 to 0.992
-      rotationVelocity.current.y *= 0.992;  // Changed from 0.99 to 0.992
+      rotationVelocity.current.x *= 0.992;  
+      rotationVelocity.current.y *= 0.992;  
       rotationVelocity.current.z *= 0.992;
     } else if (result) {
-      // Smoothly rotate to final position
       meshRef.current.rotation.x = meshRef.current.rotation.x * 0.95 + targetRotation.current.x * 0.05;
       meshRef.current.rotation.y = meshRef.current.rotation.y * 0.95 + targetRotation.current.y * 0.05;
       meshRef.current.rotation.z = meshRef.current.rotation.z * 0.95 + targetRotation.current.z * 0.05;
@@ -147,11 +146,10 @@ function D6Dice({ isRolling, result }: { isRolling: boolean; result: number | nu
   if (!isRolling && result) {
     setFinalRotation();
   } else if (isRolling) {
-    // Random initial velocity for rolling - increase these values
     rotationVelocity.current = new Vector3(
-      Math.random() * 8 - 4,  // Changed from 5 to 8
-      Math.random() * 8 - 4,  // Changed from 5 to 8
-      Math.random() * 8 - 4   // Changed from 5 to 8
+      Math.random() * 8 - 4,
+      Math.random() * 8 - 4,
+      Math.random() * 8 - 4
     );
   }
 }, [isRolling, result]);
@@ -165,11 +163,10 @@ function D6Dice({ isRolling, result }: { isRolling: boolean; result: number | nu
       meshRef.current.rotation.y += rotationVelocity.current.y * delta;
       meshRef.current.rotation.z += rotationVelocity.current.z * delta;
       
-      rotationVelocity.current.x *= 0.992;  // Changed from 0.99 to 0.992
-      rotationVelocity.current.y *= 0.992;  // Changed from 0.99 to 0.992
+      rotationVelocity.current.x *= 0.992; 
+      rotationVelocity.current.y *= 0.992;  
       rotationVelocity.current.z *= 0.992; 
     } else if (result) {
-      // Smoothly rotate to final position
       meshRef.current.rotation.x = meshRef.current.rotation.x * 0.95 + targetRotation.current.x * 0.05;
       meshRef.current.rotation.y = meshRef.current.rotation.y * 0.95 + targetRotation.current.y * 0.05;
       meshRef.current.rotation.z = meshRef.current.rotation.z * 0.95 + targetRotation.current.z * 0.05;
@@ -272,11 +269,10 @@ function GenericDice({ diceType, isRolling, result }: { diceType: string; isRoll
   
   useEffect(() => {
   if (isRolling) {
-    // Random initial velocity for rolling - increase these values
     rotationVelocity.current = new Vector3(
-      Math.random() * 8 - 4,  // Changed from 5 to 8
-      Math.random() * 8 - 4,  // Changed from 5 to 8
-      Math.random() * 8 - 4   // Changed from 5 to 8
+      Math.random() * 8 - 4,
+      Math.random() * 8 - 4,
+      Math.random() * 8 - 4
     );
   }
 }, [isRolling]);
@@ -290,8 +286,8 @@ function GenericDice({ diceType, isRolling, result }: { diceType: string; isRoll
       meshRef.current.rotation.y += rotationVelocity.current.y * delta;
       meshRef.current.rotation.z += rotationVelocity.current.z * delta;
       
-      rotationVelocity.current.x *= 0.992;  // Changed from 0.99 to 0.992
-      rotationVelocity.current.y *= 0.992;  // Changed from 0.99 to 0.992
+      rotationVelocity.current.x *= 0.992; 
+      rotationVelocity.current.y *= 0.992;  
       rotationVelocity.current.z *= 0.992; 
     }
   });
@@ -343,7 +339,6 @@ export default function ThreeDDice({ diceType, isRolling, result, onRollComplete
           <meshStandardMaterial color="#2C1810" transparent opacity={0.8} />
         </mesh>
         
-        {/* Dice component */}
         {renderDice()}
         
         {/* Allow user to rotate view */}

@@ -3,11 +3,9 @@
 @tailwind utilities;
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&display=swap');
 
-/* D&D Fantasy Design System - All colors MUST be HSL */
 
 @layer base {
   :root {
-    /* D&D Fantasy Color Palette */
     --dnd-dark: 18 37% 12%;          /* #2C1810 - Dark wood brown */
     --dnd-parchment: 45 43% 91%;     /* #F5EBD4 - Parchment cream */
     --dnd-gold: 51 70% 53%;          /* #D4AF37 - Rich gold */
@@ -16,7 +14,6 @@
     --dnd-copper: 23 70% 40%;        /* #B87333 - Copper */
     --dnd-silver: 0 0% 75%;          /* #C0C0C0 - Silver */
     
-    /* Theme mappings */
     --background: var(--dnd-dark);
     --foreground: var(--dnd-parchment);
     
@@ -47,7 +44,6 @@
     
     --radius: 0.5rem;
     
-    /* Fantasy gradients */
     --gradient-fantasy: linear-gradient(135deg, hsl(var(--dnd-red)) 0%, hsl(var(--dnd-wood)) 50%, hsl(var(--dnd-dark)) 100%);
     --gradient-gold: linear-gradient(135deg, hsl(var(--dnd-gold)) 0%, hsl(var(--dnd-copper)) 100%);
     --gradient-dice: linear-gradient(135deg, hsl(0 0% 95%) 0%, hsl(0 0% 85%) 50%, hsl(0 0% 75%) 100%);

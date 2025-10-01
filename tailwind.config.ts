@@ -47,7 +47,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // D&D Fantasy Colors
         dnd: {
           dark: "hsl(var(--dnd-dark))",
           parchment: "hsl(var(--dnd-parchment))",
